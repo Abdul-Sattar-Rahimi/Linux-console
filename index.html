@@ -18,7 +18,7 @@
     --mono: "JetBrains Mono","Fira Code","Cascadia Code","Consolas",monospace;
     --display: "IBM Plex Mono", var(--mono);
   }
-
+ 
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;height:100%;}
   body{
@@ -28,7 +28,7 @@
     overflow:hidden;
     direction:ltr;
   }
-
+ 
   /* ===================== LANDING PAGE ===================== */
   #landing{
     position:fixed; inset:0;
@@ -43,7 +43,7 @@
     text-align:center;
   }
   #landing.fading{opacity:0; filter:blur(6px); pointer-events:none;}
-
+ 
   .boot-frame{
     border:1px solid var(--green-dim);
     border-radius:6px;
@@ -53,7 +53,7 @@
     max-width:480px;
     width:100%;
   }
-
+ 
   .logo-wrap{
     width:96px; height:96px;
     margin:0 auto 22px;
@@ -70,7 +70,7 @@
   .logo-fallback{
     font-size:42px; color:var(--green); line-height:1;
   }
-
+ 
   .boot-label{
     font-size:11px; letter-spacing:.18em; color:var(--text-dim);
     text-transform:uppercase; margin-bottom:6px;
@@ -84,7 +84,7 @@
   .boot-sub{
     color:var(--text-dim); font-size:13px; margin-bottom:26px;
   }
-
+ 
   .boot-status{
     text-align:left;
     font-size:12px; color:var(--green-dim);
@@ -97,7 +97,7 @@
     vertical-align:-2px; margin-left:4px;
     animation:blink 1s steps(2,start) infinite;
   }
-
+ 
   .enter-btn{
     font-family:var(--mono);
     font-size:14px;
@@ -120,13 +120,13 @@
   }
   .enter-btn:active{transform:translateY(0);}
   .enter-btn .chevron{font-size:16px; transform:translateY(-1px);}
-
+ 
   .boot-footer{
     margin-top:18px; font-size:11px; color:#4a5e4c;
   }
-
+ 
   @keyframes blink{50%{opacity:0;}}
-
+ 
   /* ===================== TERMINAL ===================== */
   #terminal-screen{
     position:fixed; inset:0;
@@ -137,7 +137,7 @@
     z-index:5;
   }
   #terminal-screen.active{opacity:1; pointer-events:auto;}
-
+ 
   .term-titlebar{
     height:34px;
     background:#1b1f1a;
@@ -160,7 +160,7 @@
     direction:ltr;
   }
   .term-titlebar .exit-btn:hover{color:var(--text); border-color:#4a5e4c;}
-
+ 
   #term-body{
     height:calc(100% - 34px);
     overflow-y:auto;
@@ -176,7 +176,7 @@
   #term-body::-webkit-scrollbar{width:10px;}
   #term-body::-webkit-scrollbar-track{background:transparent;}
   #term-body::-webkit-scrollbar-thumb{background:#2a3328; border-radius:5px;}
-
+ 
   .line{white-space:pre-wrap; word-break:break-word; margin:0;}
   .prompt-line{display:flex; flex-wrap:wrap; align-items:baseline;}
   .ps-user{color:var(--green); font-weight:600;}
@@ -186,14 +186,14 @@
   .ps-path{color:var(--blue); font-weight:600;}
   .ps-dollar{color:var(--text); margin-right:6px;}
   .typed-cmd{color:#eef5ee;}
-
+ 
   .out{color:var(--text); opacity:.95;}
   .out .dim{color:var(--text-dim);}
   .out .hl{color:var(--amber);}
   .out .dir{color:var(--blue); font-weight:600;}
   .out .exe{color:var(--green); font-weight:600;}
   .out .err{color:#e0605a;}
-
+ 
   #input-row{display:flex; align-items:baseline; flex-wrap:wrap;}
   #cmdInput{
     flex:1; min-width:80px;
@@ -209,7 +209,7 @@
 </style>
 </head>
 <body>
-
+ 
 <!-- ===================== LANDING PAGE ===================== -->
 <div id="landing">
   <div class="boot-frame">
@@ -219,22 +219,22 @@
     <div class="boot-label">سیستم آموزشی شبیه‌سازی</div>
     <h1 class="boot-title">محیط کنسول لینوکس</h1>
     <p class="boot-sub">یک ترمینال شبیه‌سازی‌شده برای آموزش دستورات پایه</p>
-
+ 
     <div class="boot-status">
       <div><span class="ok">[ OK ]</span> kernel loaded</div>
       <div><span class="ok">[ OK ]</span> shell ready: /bin/bash</div>
       <div><span class="ok">[ OK ]</span> user session: student</div>
       <div>awaiting input <span class="cursor-tick"></span></div>
     </div>
-
+ 
     <button class="enter-btn" id="enterBtn">
       ورود به محیط کنسول <span class="chevron">›</span>
     </button>
-
+ 
     <div class="boot-footer">برای استفاده در ویدیوی آموزشی — شبیه‌سازی، نه ترمینال واقعی</div>
   </div>
 </div>
-
+ 
 <!-- ===================== TERMINAL SCREEN ===================== -->
 <div id="terminal-screen">
   <div class="term-titlebar">
@@ -248,7 +248,7 @@
       <span class="ps-user">student</span><span class="ps-at">@</span><span class="ps-host">ubuntu-lab</span><span class="ps-colon">:</span><span class="ps-path" id="pathSpan">~</span><span class="ps-dollar">$</span>
       <div id="input-row"><input type="text" id="cmdInput" autocomplete="off" autocapitalize="off" spellcheck="false" /></div>
  </div>
-
+ 
 <script>
 (function(){
   const landing = document.getElementById('landing');
@@ -259,11 +259,15 @@
   const input = document.getElementById('cmdInput');
   const pathSpan = document.getElementById('pathSpan');
   const termBody = document.getElementById('term-body');
-
+ 
   let cwd = '~';
   let history = [];
   let histIdx = -1;
-
+ 
+  // --- Ctrl+Z support: track each command's lines so we can undo/erase them ---
+  let cmdGroups = [];
+  let currentGroupEls = [];
+ 
   enterBtn.addEventListener('click', () => {
     landing.classList.add('fading');
     setTimeout(() => {
@@ -272,35 +276,53 @@
       input.focus();
     }, 450);
   });
-
+ 
   exitBtn.addEventListener('click', () => {
     termScreen.classList.remove('active');
     landing.style.display = 'flex';
     requestAnimationFrame(() => landing.classList.remove('fading'));
   });
-
+ 
   function esc(s){
     return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
-
+ 
   function promptHTML(){
     return `<span class="ps-user">student</span><span class="ps-at">@</span><span class="ps-host">ubuntu-lab</span><span class="ps-colon">:</span><span class="ps-path">${cwd}</span><span class="ps-dollar">$</span> `;
   }
-
+ 
   function appendRaw(html){
     const div = document.createElement('div');
     div.className = 'line out';
     div.innerHTML = html;
     log.appendChild(div);
+    currentGroupEls.push(div);
   }
-
+ 
   function appendCommandEcho(cmd){
     const div = document.createElement('div');
     div.className = 'line prompt-line';
     div.innerHTML = promptHTML() + `<span class="typed-cmd">${esc(cmd)}</span>`;
     log.appendChild(div);
+    currentGroupEls.push(div);
   }
-
+ 
+  // --- Ctrl+Z: erase the last command's echo + output, line by line ---
+  function undoLastCommand(){
+    if(cmdGroups.length === 0) return;
+    const group = cmdGroups.pop();
+    let i = group.length - 1;
+    (function removeNext(){
+      if(i < 0) return;
+      const el = group[i];
+      if(el && el.parentNode){
+        el.parentNode.removeChild(el);
+      }
+      i--;
+      setTimeout(removeNext, 60);
+    })();
+  }
+ 
   // Fake filesystem listing for ls
   const lsLong = `total 32
 drwxr-xr-x  6 student student 4096 Jun 24 10:12 <span class="dir">Desktop</span>
@@ -311,192 +333,202 @@ drwxr-xr-x  2 student student 4096 Jun 20 18:05 <span class="dir">Downloads</spa
 -rwxr-xr-x  1 student student 1450 Jun 23 14:22 <span class="exe">script.sh</span>
 -rw-r--r--  1 student student   58 Jun 23 16:01 log.txt
 -rw-r--r--  1 student student   12 Jun 19 11:30 file.txt`;
-
+ 
   const lsShort = `Desktop  Documents  Downloads  file.txt  log.txt  script.sh`;
-
+ 
   function runCommand(raw){
-    const cmd = raw.trim();
-    appendCommandEcho(raw);
-    if(cmd === ''){ return; }
-    history.push(cmd); histIdx = history.length;
-
-    const parts = cmd.split(/\s+/);
-    const base = parts[0];
-    const argStr = parts.slice(1).join(' ');
-
-    switch(true){
-
-      case cmd === 'clear':
-        log.innerHTML = '';
-        return;
-
-      case cmd === 'help':
-        appendRaw(`<span class="dim">دستورات قابل استفاده در این شبیه‌سازی:</span>
+    currentGroupEls = [];
+    try{
+      const cmd = raw.trim();
+      appendCommandEcho(raw);
+      if(cmd === ''){ return; }
+      history.push(cmd); histIdx = history.length;
+ 
+      const parts = cmd.split(/\s+/);
+      const base = parts[0];
+      const argStr = parts.slice(1).join(' ');
+ 
+      switch(true){
+ 
+        case cmd === 'clear':
+          log.innerHTML = '';
+          return;
+ 
+        case cmd === 'help':
+          appendRaw(`<span class="dim">دستورات قابل استفاده در این شبیه‌سازی:</span>
 ls, ls -la, pwd, cd [dir], cp src dst, mv old new, rm file, rm -rf dir,
 mkdir name, cat file, head file, tail file, tail -f log.txt,
 chmod 755 file, chown user file, sudo &lt;cmd&gt;,
 ps, ps aux, top, df -h, du -sh, ping host, curl/wget url,
 grep "text" file, find / -name "*.txt", clear`);
-        return;
-
-      case cmd === 'pwd':
-        appendRaw(`/home/student${cwd === '~' ? '' : cwd.replace('~','')}`);
-        return;
-
-      case base === 'ls' && (argStr === '-la' || argStr === '-al' || argStr === '-a' || argStr === '-l'):
-        appendRaw(lsLong);
-        return;
-
-      case base === 'ls':
-        appendRaw(lsShort);
-        return;
-
-      case base === 'cd':
-        if(!argStr || argStr === '~'){
-          cwd = '~';
-        } else if(argStr === '..'){
-          if(cwd !== '~'){
-            const segs = cwd.split('/').filter(Boolean);
-            segs.pop();
-            cwd = segs.length ? '~/' + segs.join('/') : '~';
+          return;
+ 
+        case cmd === 'pwd':
+          appendRaw(`/home/student${cwd === '~' ? '' : cwd.replace('~','')}`);
+          return;
+ 
+        case base === 'ls' && (argStr === '-la' || argStr === '-al' || argStr === '-a' || argStr === '-l'):
+          appendRaw(lsLong);
+          return;
+ 
+        case base === 'ls':
+          appendRaw(lsShort);
+          return;
+ 
+        case base === 'cd':
+          if(!argStr || argStr === '~'){
+            cwd = '~';
+          } else if(argStr === '..'){
+            if(cwd !== '~'){
+              const segs = cwd.split('/').filter(Boolean);
+              segs.pop();
+              cwd = segs.length ? '~/' + segs.join('/') : '~';
+            }
+          } else if(argStr.startsWith('/')){
+            cwd = argStr;
+          } else {
+            cwd = (cwd === '~' ? '~/' : cwd + '/') + argStr.replace(/^~\//,'');
           }
-        } else if(argStr.startsWith('/')){
-          cwd = argStr;
-        } else {
-          cwd = (cwd === '~' ? '~/' : cwd + '/') + argStr.replace(/^~\//,'');
-        }
-        pathSpan.textContent = cwd;
-        return;
-
-      case base === 'mkdir':
-        appendRaw(`<span class="dim">پوشه «${esc(argStr || 'new_folder')}» ساخته شد.</span>`);
-        return;
-
-      case base === 'cp':
-        appendRaw(`<span class="dim">'${esc(parts[1]||'')}' در '${esc(parts[2]||'')}' کپی شد.</span>`);
-        return;
-
-      case base === 'mv':
-        appendRaw(`<span class="dim">'${esc(parts[1]||'')}' به '${esc(parts[2]||'')}' منتقل/تغییرنام شد.</span>`);
-        return;
-
-      case base === 'rm' && (argStr.includes('-rf')):
-        appendRaw(`<span class="dim">پوشه و تمام محتویاتش به‌صورت دائمی حذف شد. <span class="hl">(غیرقابل بازگشت)</span></span>`);
-        return;
-
-      case base === 'rm':
-        appendRaw(`<span class="dim">فایل «${esc(parts[1]||'')}» حذف شد.</span>`);
-        return;
-
-      case base === 'cat':
-        if(parts[1] === 'file.txt'){
-          appendRaw(`Hello, Linux!`);
-        } else if(parts[1] === 'log.txt'){
-          appendRaw(`[10:01] service started
+          pathSpan.textContent = cwd;
+          return;
+ 
+        case base === 'mkdir':
+          appendRaw(`<span class="dim">پوشه «${esc(argStr || 'new_folder')}» ساخته شد.</span>`);
+          return;
+ 
+        case base === 'cp':
+          appendRaw(`<span class="dim">'${esc(parts[1]||'')}' در '${esc(parts[2]||'')}' کپی شد.</span>`);
+          return;
+ 
+        case base === 'mv':
+          appendRaw(`<span class="dim">'${esc(parts[1]||'')}' به '${esc(parts[2]||'')}' منتقل/تغییرنام شد.</span>`);
+          return;
+ 
+        case base === 'rm' && (argStr.includes('-rf')):
+          appendRaw(`<span class="dim">پوشه و تمام محتویاتش به‌صورت دائمی حذف شد. <span class="hl">(غیرقابل بازگشت)</span></span>`);
+          return;
+ 
+        case base === 'rm':
+          appendRaw(`<span class="dim">فایل «${esc(parts[1]||'')}» حذف شد.</span>`);
+          return;
+ 
+        case base === 'cat':
+          if(parts[1] === 'file.txt'){
+            appendRaw(`Hello, Linux!`);
+          } else if(parts[1] === 'log.txt'){
+            appendRaw(`[10:01] service started
 [10:03] connection established
 [10:07] warning: high memory usage`);
-        } else {
-          appendRaw(`<span class="err">cat: ${esc(parts[1]||'')}: No such file or directory</span>`);
-        }
-        return;
-
-      case base === 'head':
-        appendRaw(`[10:01] service started
+          } else {
+            appendRaw(`<span class="err">cat: ${esc(parts[1]||'')}: No such file or directory</span>`);
+          }
+          return;
+ 
+        case base === 'head':
+          appendRaw(`[10:01] service started
 [10:03] connection established`);
-        return;
-
-      case base === 'tail' && argStr.includes('-f'):
-        appendRaw(`<span class="dim">[10:07] warning: high memory usage</span>
+          return;
+ 
+        case base === 'tail' && argStr.includes('-f'):
+          appendRaw(`<span class="dim">[10:07] warning: high memory usage</span>
 <span class="dim">^C  (برای خروج از حالت دنبال‌کردن زنده، Ctrl+C بزنید)</span>`);
-        return;
-
-      case base === 'tail':
-        appendRaw(`[10:03] connection established
+          return;
+ 
+        case base === 'tail':
+          appendRaw(`[10:03] connection established
 [10:07] warning: high memory usage`);
-        return;
-
-      case base === 'chmod':
-        appendRaw(`<span class="dim">سطح دسترسی فایل «${esc(parts[2]||'')}» به ${esc(parts[1]||'')} تغییر یافت.</span>`);
-        return;
-
-      case base === 'chown':
-        appendRaw(`<span class="dim">مالکیت فایل «${esc(parts[2]||'')}» تغییر یافت.</span>`);
-        return;
-
-      case base === 'sudo':
-        appendRaw(`<span class="dim">[sudo] password for student: ********</span>
+          return;
+ 
+        case base === 'chmod':
+          appendRaw(`<span class="dim">سطح دسترسی فایل «${esc(parts[2]||'')}» به ${esc(parts[1]||'')} تغییر یافت.</span>`);
+          return;
+ 
+        case base === 'chown':
+          appendRaw(`<span class="dim">مالکیت فایل «${esc(parts[2]||'')}» تغییر یافت.</span>`);
+          return;
+ 
+        case base === 'sudo':
+          appendRaw(`<span class="dim">[sudo] password for student: ********</span>
 <span class="dim">دستور با دسترسی مدیر سیستم (root) اجرا شد: ${esc(argStr)}</span>`);
-        return;
-
-      case cmd === 'ps':
-        appendRaw(`  PID TTY          TIME CMD
+          return;
+ 
+        case cmd === 'ps':
+          appendRaw(`  PID TTY          TIME CMD
  1842 pts/0    00:00:00 bash
  1901 pts/0    00:00:00 ps`);
-        return;
-
-      case cmd === 'ps aux':
-        appendRaw(`USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+          return;
+ 
+        case cmd === 'ps aux':
+          appendRaw(`USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
 root         1  0.0  0.1 168000 11200 ?        Ss   09:00   0:02 /sbin/init
 student   1842  0.1  0.3  21344  9876 pts/0    Ss   10:00   0:00 bash
 student   2210  2.3  1.8 482112 91200 ?        Sl   10:05   0:14 firefox
 student   2390  0.0  0.0  10584  3120 pts/0    R+   10:12   0:00 ps aux`);
-        return;
-
-      case cmd === 'top':
-        appendRaw(`<span class="dim">top - 10:12:45 up 2:14,  1 user,  load average: 0.32, 0.28, 0.21</span>
+          return;
+ 
+        case cmd === 'top':
+          appendRaw(`<span class="dim">top - 10:12:45 up 2:14,  1 user,  load average: 0.32, 0.28, 0.21</span>
 Tasks: 142 total,   1 running, 141 sleeping
 %Cpu(s): 8.2 us, 2.1 sy, 0.0 ni, 89.0 id
 MiB Mem :   7821 total,   2104 free,   3210 used,   2507 buff/cache
-
+ 
   PID USER   %CPU %MEM  COMMAND
  2210 student 12.3  1.8  firefox
  1842 student  0.4  0.3  bash
     1 root     0.0  0.1  systemd
 <span class="dim">(برای خروج از top در ترمینال واقعی، کلید q را بزنید)</span>`);
-        return;
-
-      case cmd === 'df -h':
-        appendRaw(`Filesystem      Size  Used Avail Use% Mounted on
+          return;
+ 
+        case cmd === 'df -h':
+          appendRaw(`Filesystem      Size  Used Avail Use% Mounted on
 /dev/sda1        50G   18G   30G  38% /
 tmpfs           3.9G     0  3.9G   0% /dev/shm`);
-        return;
-
-      case base === 'du' && argStr.includes('-sh'):
-        appendRaw(`128M\t${esc(parts[2] || '.')}`);
-        return;
-
-      case base === 'ping':
-        appendRaw(`PING ${esc(parts[1]||'example.com')} (93.184.216.34) 56(84) bytes of data.
+          return;
+ 
+        case base === 'du' && argStr.includes('-sh'):
+          appendRaw(`128M\t${esc(parts[2] || '.')}`);
+          return;
+ 
+        case base === 'ping':
+          appendRaw(`PING ${esc(parts[1]||'example.com')} (93.184.216.34) 56(84) bytes of data.
 64 bytes from 93.184.216.34: icmp_seq=1 ttl=56 time=14.2 ms
 64 bytes from 93.184.216.34: icmp_seq=2 ttl=56 time=13.8 ms
 64 bytes from 93.184.216.34: icmp_seq=3 ttl=56 time=15.1 ms
 <span class="dim">^C  (برای توقف، Ctrl+C بزنید)</span>
 --- ${esc(parts[1]||'example.com')} ping statistics ---
 3 packets transmitted, 3 received, 0% packet loss`);
-        return;
-
-      case base === 'curl' || base === 'wget':
-        appendRaw(`<span class="dim">در حال دریافت محتوای آدرس ${esc(parts[1]||'')} ...</span>
+          return;
+ 
+        case base === 'curl' || base === 'wget':
+          appendRaw(`<span class="dim">در حال دریافت محتوای آدرس ${esc(parts[1]||'')} ...</span>
 <span class="dim">200 OK — 14.2 KB دریافت شد.</span>`);
-        return;
-
-      case base === 'grep':
-        appendRaw(`log.txt:[10:07] warning: high memory usage`);
-        return;
-
-      case base === 'find':
-        appendRaw(`./Documents/notes.txt
+          return;
+ 
+        case base === 'grep':
+          appendRaw(`log.txt:[10:07] warning: high memory usage`);
+          return;
+ 
+        case base === 'find':
+          appendRaw(`./Documents/notes.txt
 ./Downloads/setup.txt
 ./file.txt`);
-        return;
-
-      default:
-        appendRaw(`<span class="err">bash: ${esc(base)}: command not found</span>
+          return;
+ 
+        default:
+          appendRaw(`<span class="err">bash: ${esc(base)}: command not found</span>
 <span class="dim">برای دیدن لیست دستورات قابل اجرا، عبارت <code>help</code> را تایپ کنید.</span>`);
+      }
+    } finally {
+      cmdGroups.push(currentGroupEls);
     }
   }
-
+ 
   input.addEventListener('keydown', (e) => {
+    if(e.ctrlKey && (e.key === 'z' || e.key === 'Z')){
+      e.preventDefault();
+      undoLastCommand();
+      return;
+    }
     if(e.key === 'Enter'){
       const val = input.value;
       input.value = '';
@@ -510,11 +542,11 @@ tmpfs           3.9G     0  3.9G   0% /dev/shm`);
       if(histIdx < history.length){ histIdx++; input.value = history[histIdx] || ''; }
     }
   });
-
+ 
   document.getElementById('term-body').addEventListener('click', () => input.focus());
-
+ 
 })();
 </script>
-
+ 
 </body>
 </html>
